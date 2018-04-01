@@ -31,8 +31,6 @@ uptimeinfo=$(uptime -p)
 processinfo=$(ps aux | wc -l)
 userinfo=$(users | wc -w)
 networkinfo="--Network--"
-ifaceinfo=$(ip -o -f inet addr | awk '{print $1" iface "$2 " : "  $4}')
-
 
 echo $hwinfo
 echo 'CPU:' $cpuinfo
@@ -48,4 +46,12 @@ echo 'Uptime:' $uptimeinfo
 echo 'Processes running:' $processinfo
 echo 'Users logged in:' $userinfo
 echo $networkinfo
-echo $ifaceinfo
+
+for i in $(ip a list | awk -F:' ' '{print $2}' | sed '/^$/d'); do
+  if [ -z "$(ip -4 a s "$i" | grep inet | sed 's/^ *//g' | awk -F' ' '{print $2}')" ]; then
+    echo "$i: -"
+  else
+    echo -n "${i}: " && echo `ip -4 a s "$i" | grep inet | sed 's/^ *//g' | awk -F' ' '{print $2}'`
+  fi
+done
+
